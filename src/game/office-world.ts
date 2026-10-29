@@ -1,0 +1,12 @@
+import { Color3, Color4, HemisphericLight, MeshBuilder, StandardMaterial, TransformNode, Vector3 } from "./babylon";
+import type { Scene } from "./babylon";
+import type { World } from "./world";
+import { CELL } from "./level";
+import { OFFICE_EXIT, OFFICE_FLOOR_HEIGHT } from "./office-level";
+export function createOfficeWorld(scene:Scene):World { scene.clearColor=new Color4(.055,.075,.09,1); const light=new HemisphericLight("office-light",new Vector3(.2,1,-.3),scene); light.intensity=.95; const materials:Record<string,StandardMaterial>={}; for(const [n,c] of Object.entries({wall:"#81909a",floor:"#78828a",glass:"#466777",metal:"#a6b3b5",trim:"#263642",dark:"#151e27",enemy:"#505b61",enemyDark:"#1c242b",amber:"#ffb64d",red:"#ff3948",white:"#e8e8dc",ammo:"#55d4e5",health:"#69d499",card:"#f4ca58",steel:"#66818b"})){const m=new StandardMaterial(`office-${n}`,scene);m.diffuseColor=Color3.FromHexString(c);if(n==="amber"||n==="card")m.emissiveColor=m.diffuseColor.scale(.45);materials[n]=m;} const box=(name:string,x:number,y:number,z:number,w:number,h:number,d:number,mat:string)=>{const m=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=materials[mat];return m;};
+for(let floor=0;floor<3;floor++){const y=floor*OFFICE_FLOOR_HEIGHT;for(let z=1;z<18;z++)for(let x=1;x<18;x++){if(z>=7&&z<12&&((floor===1&&x>=6&&x<9)||(floor===2&&x>=10&&x<13)))continue;box("office-floor-tile",(x+.5)*CELL,y-.12,(z+.5)*CELL,CELL,.24,CELL,(x+z)%2?"floor":"steel");}for(const x of [CELL-0.2,18*CELL+.2])box("office-wall",x,y+1.7,9.5*CELL,.4,3.4,17*CELL,"wall");for(const z of [CELL-.2,18*CELL+.2])box("office-wall",9.5*CELL,y+1.7,z,17*CELL,3.4,.4,"wall");for(const [x,z] of [[5,5],[14,5],[5,14],[14,14]]){box("office-desk",x*CELL,y+.72,z*CELL,3.4,1.25,1.65,"trim");box("office-monitor",x*CELL,y+1.65,z*CELL-.4,1,.65,.12,"glass");box("office-chair",x*CELL,y+.5,z*CELL+1.5,.8,1,.8,"dark");}for(const x of [4,9,15])box("office-light-panel",x*CELL,y+3.15,9*CELL,3,.08,.8,"amber");}
+for(let flight=0;flight<2;flight++)for(let step=0;step<24;step++){
+const height=(step+1)*OFFICE_FLOOR_HEIGHT/24;
+box("office-stair",(7.5+flight*4)*CELL,flight*OFFICE_FLOOR_HEIGHT+height/2,7*CELL+(step+.5)*5*CELL/24,3*CELL,height,5*CELL/24,"metal");
+}
+box("office-exit",OFFICE_EXIT.x,1.5,2*CELL-.1,3,3,.12,"amber");const exit=new TransformNode("office-exit-marker",scene);exit.position.set(OFFICE_EXIT.x,0,OFFICE_EXIT.z);return{doors:[],exit,materials,animate(){}}; }

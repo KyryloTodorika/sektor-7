@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101718" />
+    <meta
+      name="description"
+      content="SEKTOR 7: drei Retro-Shooter-Missionen mit Wachdrohnen, Zombies und Gummienten. Mit automatischen Levelübergängen."
+    />
+    <title>SEKTOR 7 — Lockdown</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <canvas id="game" aria-label="3D-Spielfeld" tabindex="0"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="wordmark" href="/" aria-label="Sektor 7 Startseite"
+        ><span class="brand-symbol">▰</span> SEKTOR <b>7</b></a
+      >
+      <div class="station">
+        <span class="status-dot"></span>
+        <span id="station-name">FORSCHUNGSANLAGE</span>
+        <span class="divider">/</span>
+        <span class="station-status">VERBINDUNG AKTIV</span>
+      </div>
+      <button
+        id="settings-toggle"
+        class="icon-button"
+        aria-label="Einstellungen öffnen"
+        title="Einstellungen"
+      >
+        ⚙
+      </button>
+    </header>
+
+    <main id="menu" class="menu">
+      <section class="intro">
+        <div class="eyebrow">
+          <span class="tiny-line"></span> SEKTOR 07
+          <span class="eyebrow-slash">/</span>
+          <span id="menu-mission">EINSATZ 001</span>
+        </div>
+        <h1>
+          <span id="title-top">LOCK</span
+          ><span class="title-bottom"
+            ><span id="title-bottom">DOWN</span
+            ><em class="title-dot">.</em></span
+          >
+        </h1>
+        <p id="intro-copy" class="intro-copy">
+          Die Verbindung ist abgebrochen.<br />Das Sicherheitssystem jagt
+          dich.<br /><strong>Finde einen Weg nach draußen.</strong>
+        </p>
+        <div class="level-selector" role="group" aria-label="Level auswählen">
+          <button id="level-1" class="level-choice active" aria-pressed="true">
+            <small>LEVEL 01 · ANLAGE</small
+            ><strong>LOCKDOWN <span>↗</span></strong>
+          </button>
+          <button id="level-2" class="level-choice" aria-pressed="false">
+            <small>LEVEL 02 · AUSSENAREAL</small
+            ><strong>DEAD COAST <span>↗</span></strong>
+          </button>
+          <button id="level-3" class="level-choice" aria-pressed="false">
+            <small>LEVEL 03 · SEEHAUS</small
+            ><strong>LAKEHOUSE <span>↗</span></strong>
+          </button>
+          <button id="level-4" class="level-choice" aria-pressed="false">
+            <small>LEVEL 04 · KONDITOREI</small><strong>SUGAR RUSH <span>↗</span></strong>
+          </button>
+          <button id="level-5" class="level-choice" aria-pressed="false">
+            <small>LEVEL 05 · HIPPOS</small><strong>HIPPO NAP <span>↗</span></strong>
+          </button>
+          <button id="level-6" class="level-choice" aria-pressed="false">
+            <small>LEVEL 06 · BÜROKOMPLEX</small><strong>STEEL HORIZON <span>↗</span></strong>
+          </button>
+        </div>
+        <p class="campaign-note">
+          SECHS EINSÄTZE · AUTOMATISCH WEITER NACH ABSCHLUSS
+        </p>
+        <button id="start" class="primary-button" disabled>
+          <span id="start-label">SYSTEM WIRD GELADEN</span
+          ><span aria-hidden="true">↗</span>
+        </button>
+        <p class="start-note">
+          SINGLEPLAYER <span>·</span> MAUS & TASTATUR <span>·</span> KOPFHÖRER
+          EMPFOHLEN
+        </p>
+        <div class="control-guide">
+          <div>
+            <kbd>W</kbd>
+            <div class="wasd-bottom"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+            <span>Bewegen</span>
+          </div>
+          <div>
+            <span class="mouse-icon" aria-hidden="true"></span
+            ><span>Zielen & schießen</span>
+          </div>
+          <div><kbd>E</kbd><span>Interagieren</span></div>
+          <div><kbd>R</kbd><span>Nachladen</span></div>
+        </div>
+      </section>
+      <div class="scene-caption">
+        <span class="caption-corner"></span
+        ><span>LIVE-FEED <span class="red-dot"></span></span
+        ><b
+          ><span id="caption-label">REAKTORHALLE</span>
+          <span id="caption-code" class="caption-number">A–01</span></b
+        ><span class="caption-coordinates"
+          >52° 07′ N &nbsp; / &nbsp; SIGNAL STABIL</span
+        >
+      </div>
+      <footer class="menu-footer">
+        <span>EXPERIMENTAL BUILD <b>0.3</b></span
+        ><span>KEIN KONTAKT. KEINE VERSTÄRKUNG.</span
+        ><span id="menu-renderer">WEBGL 2</span>
+      </footer>
+    </main>
+
+    <section id="hud" class="hud hidden" aria-label="Spielstatus">
+      <div class="mission">
+        <span class="mission-label">AKTUELLES ZIEL</span
+        ><span id="objective">Zugangskarte im Sicherheitslabor finden</span
+        ><span id="location">WARTUNGSTRAKT</span>
+      </div>
+      <div class="crosshair" id="crosshair" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><b></b>
+      </div>
+      <div id="hit-marker" class="hit-marker" aria-hidden="true">×</div>
+      <div id="interaction" class="interaction hidden">
+        <kbd>E</kbd><span></span>
+      </div>
+      <div
+        id="notification"
+        class="notification"
+        role="status"
+        aria-live="polite"
+      ></div>
+      <div class="hud-bottom">
+        <div class="health-panel">
+          <span class="hud-label"><b>+</b> VITALWERTE</span
+          ><span class="health-value"
+            ><strong id="health">100</strong><small>%</small></span
+          ><span class="health-track"><i id="health-bar"></i></span>
+        </div>
+        <div class="equipment">
+          <span class="equipment-mark">⌁</span
+          ><span id="card-status">KEINE ZUGANGSKARTE</span
+          ><span class="kill-count"
+            ><b id="kills">00</b> / <span id="enemy-total">07</span>
+            <span id="enemy-label">WACHDROHNEN</span></span
+          >
+        </div>
+        <div class="ammo-panel">
+          <span class="hud-label"><span id="weapon-name">PX–9</span> <span id="weapon-type">DIENSTPISTOLE</span></span
+          ><span class="ammo-value"
+            ><strong id="ammo">12</strong
+            ><small>/ <span id="reserve">72</span></small></span
+          ><span id="reload-hint" class="reload-hint"
+            >9 MM · HALBAUTOMATISCH</span
+          >
+        </div>
+      </div>
+      <div class="bottom-hints">
+        <span><kbd>SHIFT</kbd> Sprinten &nbsp; <kbd>SPACE</kbd> Springen</span
+        ><span><kbd>ESC</kbd> Pause</span>
+      </div>
+    </section>
+    <div id="damage-flash" class="damage-flash" aria-hidden="true"></div>
+
+    <section
+      id="level-transition"
+      class="overlay transition-overlay hidden"
+      aria-label="Nächstes Level"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="dialog">
+        <span class="eyebrow">EINSATZ ABGESCHLOSSEN</span>
+        <p id="transition-stats" class="transition-stats"></p>
+        <p class="next-mission-label">NÄCHSTER EINSATZ</p>
+        <h2 id="transition-level"></h2>
+        <div class="transition-countdown">
+          WEITER IN <strong id="transition-seconds">3</strong>
+        </div>
+        <p class="dialog-hint">Geht automatisch weiter · Esc zum Pausieren</p>
+      </div>
+    </section>
+    <section id="pause" class="overlay hidden" aria-label="Spiel pausiert">
+      <div class="dialog">
+        <span class="eyebrow">VERBINDUNG ANGEHALTEN</span>
+        <h2>Kurze Funkstille.</h2>
+        <p>Dein Einsatz wartet auf dich.</p>
+        <button id="resume" class="primary-button">
+          <span>WEITERSPIELEN</span><span>↗</span></button
+        ><button id="pause-settings" class="text-button">Einstellungen ⚙</button
+        ><button id="restart-pause" class="text-button">
+          Einsatz neu starten ↻
+        </button>
+        <button id="select-level-pause" class="text-button">
+          Zur Levelauswahl →
+        </button>
+        <p class="dialog-hint">
+          WASD Bewegen · Maus Schießen · R Nachladen<br />E Interagieren · Shift
+          Sprinten · Leertaste Springen
+        </p>
+      </div>
+    </section>
+    <section id="result" class="overlay hidden" aria-label="Einsatzergebnis">
+      <div class="dialog">
+        <span id="result-eyebrow" class="eyebrow"></span>
+        <h2 id="result-title"></h2>
+        <p id="result-copy"></p>
+        <div id="result-stats" class="result-stats"></div>
+        <button id="hippo-continue" class="primary-button hidden">WEITER ZUM BÜRO →</button>
+        <button id="restart" class="primary-button">
+          <span>NEUER EINSATZ</span><span>↻</span></button
+        ><button id="select-level-result" class="text-button">
+          Zur Levelauswahl →
+        </button>
+      </div>
+    </section>
+    <section id="settings" class="overlay hidden" aria-label="Einstellungen">
+      <div class="dialog settings-dialog">
+        <div class="dialog-heading">
+          <span class="eyebrow">SYSTEMKONFIGURATION</span
+          ><button
+            id="settings-close"
+            class="icon-button"
+            aria-label="Einstellungen schließen"
+          >
+            ×
+          </button>
+        </div>
+        <h2>Einstellungen</h2>
+        <label for="sensitivity"
+          >Mausempfindlichkeit
+          <output id="sensitivity-value">1.0</output></label
+        ><input
+          id="sensitivity"
+          type="range"
+          min="0.3"
+          max="2"
+          step="0.1"
+          value="1"
+        /><label for="volume"
+          >Lautstärke <output id="volume-value">50 %</output></label
+        ><input
+          id="volume"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value="50"
+        /><label for="quality">Grafikqualität</label
+        ><select id="quality">
+          <option value="high">Hoch · scharfes Bild</option>
+          <option value="low">Leistung · reduzierte Auflösung</option></select
+        ><label class="checkbox-label"
+          ><input id="fps-toggle" type="checkbox" checked /> FPS anzeigen</label
+        ><button id="settings-done" class="primary-button">
+          <span>ÜBERNEHMEN</span><span>✓</span>
+        </button>
+      </div>
+    </section>
+    <section id="error" class="overlay hidden">
+      <div class="dialog">
+        <span class="eyebrow">VERBINDUNGSFEHLER</span>
+        <h2>Start nicht möglich.</h2>
+        <p id="error-copy"></p>
+        <button class="primary-button" onclick="location.reload()">
+          ERNEUT VERSUCHEN ↻
+        </button>
+      </div>
+    </section>
+    <div id="fps" class="fps">— FPS</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
